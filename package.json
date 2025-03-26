@@ -55,7 +55,9 @@
   "description": "Page loader utility",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test jest --colors --runInBand --bail"
+    "test": "NODE_ENV=test jest --colors --runInBand --bail",
+    "build": "your-build-command-here",
+    "lint": "your-lint-command-here"
   },
   "repository": {
     "type": "git",

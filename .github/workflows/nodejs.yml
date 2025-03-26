@@ -26,8 +26,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: Install dependencies
       run: npm install --legacy-peer-deps
-    - name: Install jest
-      run: npm install jest
     - name: Make CLI tool globally available
       run: npm link
     - name: Build
