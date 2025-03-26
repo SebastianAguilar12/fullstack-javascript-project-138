@@ -33,4 +33,4 @@ jobs:
     - name: Lint
       run: npm run lint --if-present
     - name: Test
-      run: npm test
+      run: npx jest
