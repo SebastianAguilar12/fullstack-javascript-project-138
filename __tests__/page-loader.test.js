@@ -88,4 +88,13 @@ describe('getFileFromURL', () => {
       expect(resultFileHTML).toBe(modifiedExpectedContent);
     });
   });
+  describe('images downloading', () => {
+    test('should download images to specified directory', async () => {
+      await getFileFromURL(TEST_URL, tempdir);
+      const imagesDir = path.join(tempdir, 'codica-la-cursos_files');
+      const images = await fs.promises.readdir(imagesDir);
+      console.log(images);
+      expect(images.length).toBeGreaterThan(0);
+    });
+  })
 });

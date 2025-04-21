@@ -9,9 +9,9 @@ program
   .description('Page loader utility')
   .arguments('<url>')
   .option('-o, --output [dir]', 'output dir', process.cwd())
-  .action((URLToExamine, options) => {
+  .action(async (URLToExamine, options) => {
     const outputDir = options.output || process.cwd();
-    console.log(`Directorio de salida: ${outputDir}`);
-    console.log(getFileFromURL(URLToExamine, outputDir));
+    // console.log(`Directorio de salida: ${outputDir}`);
+    await getFileFromURL(URLToExamine, outputDir);
   })
   .parse(process.argv);
