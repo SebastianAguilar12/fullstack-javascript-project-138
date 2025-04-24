@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import path from 'path';
-import axios from 'axios';
 import * as fs from 'fs';
+import axios from './axiosInstance.js';
 
 const getWebsiteSlugName = (url) => {
   const urlClass = new URL(url);
@@ -20,7 +20,7 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
       return ({ $element, url, baseUrl });
     })
     .filter(({ url }) => url.origin === baseUrl);
-  console.log(elementsWithUrls);
+  // console.log(elementsWithUrls);
   elementsWithUrls.forEach(({ $element, url }) => {
     let baseName = path.basename(url.pathname);
     if (baseName === '') {
@@ -42,7 +42,7 @@ const processedResources = (baseURL, baseDirName, html) => {
   processedResource($, 'img', 'src', baseURL, baseDirName, assets);
   processedResource($, 'link', 'href', baseURL, baseDirName, assets);
   processedResource($, 'script', 'src', baseURL, baseDirName, assets);
-  console.log(assets);
+  // console.log(assets);
   return { html: $.html(), assets };
 };
 
@@ -59,8 +59,8 @@ const downloadAsset = (dirname, { url, filename }) => axios.get(url.toString(), 
       return fs.promises.writeFile(fullpath, response.data);
     }))
   .catch((error) => {
-    console.log('Error al descargar el recurso: ', error);
-    throw new Error('Error al descargar el recurso: ', error);
+    console.log('Error al descargar el recurso: ', error.message);
+    throw new Error(`Error al descargar el recurso: ${error.message}`);
   });
 
 export {

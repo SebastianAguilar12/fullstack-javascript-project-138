@@ -26,12 +26,12 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
     })
     // Descargar assets data.assets.map(downloadAsset)
     .then((data) => {
-      console.log(data.assets);
+      // console.log(data.assets);
       return Promise.all(
         data.assets.map((asset) => downloadAsset(dirContainerPath, asset))
       );
     })
-    .then(()=>console.log(`Assets downloaded successfully.`))
+    .then(() => console.log(`Assets downloaded successfully.`))
     .catch((error) => {
       throw new Error(`Failed to download HTML: ${error.message}`);
     });
