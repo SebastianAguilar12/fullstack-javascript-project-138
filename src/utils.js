@@ -43,6 +43,7 @@ const processedResources = (baseURL, baseDirName, html) => {
   processedResource($, 'link', 'href', baseURL, baseDirName, assets);
   processedResource($, 'script', 'src', baseURL, baseDirName, assets);
   // console.log(assets);
+  // console.log({ html: $.html(), assets });
   return { html: $.html(), assets };
 };
 
@@ -59,8 +60,8 @@ const downloadAsset = (dirname, { url, filename }) => axios.get(url.toString(), 
       return fs.promises.writeFile(fullpath, response.data);
     }))
   .catch((error) => {
-    console.log('Error al descargar el recurso: ', error.message);
-    throw new Error(`Error al descargar el recurso: ${error.message}`);
+    // Aquí decides si quieres lanzar el error o terminar el proceso
+    throw new Error(`${error.config.url}`);
   });
 
 export {

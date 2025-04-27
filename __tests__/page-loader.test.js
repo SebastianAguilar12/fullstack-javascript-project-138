@@ -50,7 +50,6 @@ describe('getFileFromURL', () => {
       }
       return false;
     };
-    
     test('should create file in specified directory', async () => {
       const filepath = path.join(tempdir, EXPECTED_FILENAME);
       await getFileFromURL(TEST_URL, tempdir);
@@ -60,11 +59,23 @@ describe('getFileFromURL', () => {
     test('should fail gracefully when URL is invalid', async () => {
       const invalidURL = 'https://invalid-url.com';
       nock('https://invalid-url.com')
-        .get('/')
+        .persist()
+        .get(/.*/)
         .reply(404);
       await expect(getFileFromURL(invalidURL, tempdir))
         .rejects
         .toThrow();
+    });
+  });
+  describe('error handling', () => {
+    test('shows error message if webpage is not available', async () => {
+      const testUrl = 'https://example.com/broken';
+      const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+      // Interceptamos la solicitud y devolvemos un error
+      nock('https://example.com')
+        .get('/broken')
+        .reply(404);
+      await expect(getFileFromURL(testUrl, tmpDir)).rejects.toThrow();
     });
   });
   describe('HTML modification', () => {

@@ -9,9 +9,14 @@ program
   .description('Page loader utility')
   .arguments('<url>')
   .option('-o, --output [dir]', 'output dir', process.cwd())
-  .action(async (URLToExamine, options) => {
+  .action((URLToExamine, options) => {
     const outputDir = options.output || process.cwd();
     // console.log(`Directorio de salida: ${outputDir}`);
-    await getFileFromURL(URLToExamine, outputDir);
+    getFileFromURL(URLToExamine, outputDir)
+      .then(({ filepath, assetsDownloaded }) => console.log(`Page was downloaded at '${filepath}'. ${assetsDownloaded} assets downloaded.`))
+      .catch((error) => {
+        console.error(`\n🚨 Ocurrió un problema: ${error.message}\n`);
+        process.exit(1);
+      });
   })
   .parse(process.argv);

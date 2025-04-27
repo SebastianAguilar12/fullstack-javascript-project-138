@@ -1,6 +1,7 @@
 import path from 'path';
 import * as fs from 'fs';
 import axios from 'axios';
+import PageLoaderError from './errors.js';
 import {
   getWebsiteSlugName,
   downloadingDirName,
@@ -9,6 +10,17 @@ import {
   processedResources,
 }
   from './utils.js';
+
+const errorMessages = {
+  EACCES: 'Permiso denegado. No puedes escribir en el directorio.',
+  ENOENT: 'Archivo o directorio no encontrado.',
+  ENOTDIR: 'Esperaba un directorio pero encontré un archivo.',
+  EISDIR: 'Esperaba un archivo pero encontré un directorio.',
+  EBUSY: 'El archivo o directorio está en uso.',
+  ECONNREFUSED: 'No se pudo conectar con el servidor.',
+  ENOTFOUND: 'Servidor no encontrado.',
+  ETIMEDOUT: 'La conexión tardó demasiado y fue cancelada.',
+};
 
 export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const webSiteSlugName = getWebsiteSlugName(webSite);
@@ -27,12 +39,24 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
     // Descargar assets data.assets.map(downloadAsset)
     .then((data) => {
       // console.log(data.assets);
+      console.log(`🔎 Descargando ${webSite}...`);
       return Promise.all(
-        data.assets.map((asset) => downloadAsset(dirContainerPath, asset))
+        data.assets.map((asset) => downloadAsset(dirContainerPath, asset)),
       );
     })
-    .then(() => console.log(`Assets downloaded successfully.`))
+    .then((assets) => ({
+      filepath: webSiteNameWithExtensionPath,
+      assetsDownloaded: assets.length,
+    }))
     .catch((error) => {
-      throw new Error(`Failed to download HTML: ${error.message}`);
+      const message = errorMessages[error.code] || `❌ Error desconocido: ${error.message}`;
+      if (error.code === 'EACCES') {
+        throw new PageLoaderError(`❌ Permiso denegado. No puedes escribir en el directorio: ${savingDir}`);
+      } else if (error.code === 'ENOENT') {
+        throw new PageLoaderError(`❌ El directorio de destino: ${savingDir} no existe`);
+      } else if (error.code === 'ENOTDIR') {
+        throw new PageLoaderError(`❌ Se esperaba un directorio, pero la ruta: ${savingDir} no es un directorio`);
+      }
+      throw new Error(`${message} 🕵️‍♂️, el archivo no fue encontrado. Verifica que la URL esté bien escrita o que el archivo no haya sido removido`); // o relanzarlo para que el bin lo atrape
     });
 }
