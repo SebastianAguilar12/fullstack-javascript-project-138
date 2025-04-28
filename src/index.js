@@ -6,8 +6,8 @@ import {
   getWebsiteSlugName,
   downloadingDirName,
   makeDashedFileName,
-  downloadAsset,
   processedResources,
+  downloadAssetsSequentially,
 }
   from './utils.js';
 
@@ -29,6 +29,14 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const webSiteNameWithExtensionPath = path.join(savingDir, webSiteNameWithExtension);
   const dirContainer = downloadingDirName(webSite);
   const dirContainerPath = path.join(savingDir, dirContainer);
+  fs.access(savingDir, fs.constants.W_OK, (notAccess) => {
+    if (notAccess) {
+      fs.promises.mkdir(dirContainerPath, { recursive: true })
+        .then(() => console.log(`Directorio ${savingDir} creado.`));
+    } else {
+      console.log(`Directorio ${savingDir} ya existe.`);
+    }
+  });
   return axios.get(webSite)
     .then((response) => {
       const htmlContent = response.data;
@@ -40,14 +48,12 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
     .then((data) => {
       // console.log(data.assets);
       console.log(`🔎 Descargando ${webSite}...`);
-      return Promise.all(
-        data.assets.map((asset) => downloadAsset(dirContainerPath, asset)),
-      );
+      return downloadAssetsSequentially(dirContainerPath, data.assets)
+        .then(() => ({
+          filepath: webSiteNameWithExtensionPath,
+          assetsDownloaded: data.assets.length,
+        }));
     })
-    .then((assets) => ({
-      filepath: webSiteNameWithExtensionPath,
-      assetsDownloaded: assets.length,
-    }))
     .catch((error) => {
       const message = errorMessages[error.code] || `❌ Error desconocido: ${error.message}`;
       if (error.code === 'EACCES') {

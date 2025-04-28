@@ -38,17 +38,24 @@ describe('getFileFromURL', () => {
     await fs.promises.rm(tempdir, { recursive: true, force: true });
   });
   describe('file creation', () => {
+    const sleep = (ms) => new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
     const waitForFile = async (filePath, timeout = 1000, interval = 100) => {
       const start = Date.now();
-      while (Date.now() - start < timeout) {
+      const checkFile = async () => {
         try {
           await fs.promises.access(filePath);
           return true;
         } catch {
-          await new Promise((res) => setTimeout(res, interval));
+          if (Date.now() - start >= timeout) {
+            return false;
+          }
+          await sleep(interval);
+          return checkFile();
         }
-      }
-      return false;
+      };
+      return checkFile();
     };
     test('should create file in specified directory', async () => {
       const filepath = path.join(tempdir, EXPECTED_FILENAME);

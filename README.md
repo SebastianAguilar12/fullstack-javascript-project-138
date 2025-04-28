@@ -8,3 +8,5 @@ Demostración de descarga de la página y descarga de imágenes: https://asciine
 Demostración del debugging, descargando recursos de la url 'https://microsoft.com/es-co': https://asciinema.org/a/nLPw4Ep2x41xgTEOajbMme25Q
 
 Mostrando el manejo de errores al descargar archivos y las pruebas para cuando el código lanza un error: https://asciinema.org/a/W8ZCxKST9H3HbeJ6ZdME6Tc2H
+
+Instalando `listr` package y mostrando descarga de recursos de la página `https://microsoft.com/es-co`: https://asciinema.org/a/GpErOXTnGxTCMDjvCGezjKHPB 
