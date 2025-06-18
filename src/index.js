@@ -25,31 +25,28 @@ const errorMessages = {
 
 export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const sanitizedDir = sanitizeOutputDir(savingDir);
-  if (!sanitizedDir) return Promise.reject(new Error(`❌ No se puede usar el directorio restringido: ${sanitizedDir || process.cwd()}`));
+  if (!sanitizedDir) return Promise.reject(new Error(`❌ No se puede usar el directorio restringido: ${savingDir || process.cwd()}`));
   const webSiteSlugName = getWebsiteSlugName(webSite);
   const url = new URL(webSite);
   const webSiteNameWithExtension = `${makeDashedFileName(webSiteSlugName)}.html`;
   const webSiteNameWithExtensionPath = path.join(savingDir, webSiteNameWithExtension);
   const dirContainer = downloadingDirName(webSite);
   const dirContainerPath = path.join(savingDir, dirContainer);
-  fs.access(savingDir, fs.constants.W_OK, (notAccess) => {
-    if (notAccess) {
-      fs.promises.mkdir(dirContainerPath, { recursive: true })
-        .then(() => console.log(`Directorio ${savingDir} creado.`));
-    } else {
-      console.log(`Directorio ${savingDir} ya existe.`);
-    }
-  });
-  return axios.get(webSite)
+  return fs.promises.access(savingDir, fs.constants.W_OK)
+    .catch(() => {
+      throw new PageLoaderError(`❌ El directorio de destino: ${savingDir} no existe`);
+    })
+    .then(() => {
+      return fs.promises.mkdir(dirContainerPath, { recursive: true });
+    })
+    .then(axios.get(webSite))
     .then((response) => {
       const htmlContent = response.data;
       const data = processedResources(url.origin, dirContainerPath, htmlContent);
       return fs.promises.writeFile(webSiteNameWithExtensionPath, data.html, 'utf-8')
         .then(() => data);
     })
-    // Descargar assets data.assets.map(downloadAsset)
     .then((data) => {
-      // console.log(data.assets);
       console.log(`🔎 Descargando ${webSite}...`);
       return downloadAssetsConcurrently(dirContainerPath, data.assets)
         .then(() => ({
