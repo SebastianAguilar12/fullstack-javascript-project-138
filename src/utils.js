@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import path from 'path';
 import * as fs from 'fs';
-import Listr from 'listr';
+import { Listr } from 'listr2';
 import axios from './axiosInstance.js';
 
 const getWebsiteSlugName = (url) => {
@@ -64,12 +64,22 @@ const downloadAsset = (dirname, { url, filename }) => axios.get(url.toString(), 
     // Aquí decides si quieres lanzar el error o terminar el proceso
     throw new Error(`Error descargando el recurso: ${error.config?.url || 'desconocido'}`);
   });
-const downloadAssetsSequentially = (dirname, assets) => {
+const downloadAssetsConcurrently = (dirname, assets) => {
   const tasks = new Listr(assets.map((asset) => ({
     title: `Descargando ${asset.filename}`,
     task: () => downloadAsset(dirname, asset),
-  })), { concurrent: false });
+  })), {
+    concurrent: true,
+    exitOnError: false,
+    rendererOptions: { collapse: false },
+  });
   return tasks.run();
+};
+
+const sanitizeOutputDir = (dir) => {
+  const restrictedPaths = ['/sys', '/etc', '/bin', '/lib'];
+  const finalDir = dir || process.cwd();
+  return restrictedPaths.includes(finalDir) ? null : finalDir;
 };
 
 export {
@@ -78,5 +88,6 @@ export {
   makeDashedFileName,
   makeDashedDirName,
   processedResources,
-  downloadAssetsSequentially,
+  downloadAssetsConcurrently,
+  sanitizeOutputDir,
 };

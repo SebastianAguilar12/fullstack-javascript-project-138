@@ -7,7 +7,8 @@ import {
   downloadingDirName,
   makeDashedFileName,
   processedResources,
-  downloadAssetsSequentially,
+  downloadAssetsConcurrently,
+  sanitizeOutputDir,
 }
   from './utils.js';
 
@@ -23,6 +24,8 @@ const errorMessages = {
 };
 
 export default function getFileFromURL(webSite, savingDir = process.cwd()) {
+  const sanitizedDir = sanitizeOutputDir(savingDir);
+  if (!sanitizedDir) return Promise.reject(new Error(`❌ No se puede usar el directorio restringido: ${sanitizedDir || process.cwd()}`));
   const webSiteSlugName = getWebsiteSlugName(webSite);
   const url = new URL(webSite);
   const webSiteNameWithExtension = `${makeDashedFileName(webSiteSlugName)}.html`;
@@ -48,7 +51,7 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
     .then((data) => {
       // console.log(data.assets);
       console.log(`🔎 Descargando ${webSite}...`);
-      return downloadAssetsSequentially(dirContainerPath, data.assets)
+      return downloadAssetsConcurrently(dirContainerPath, data.assets)
         .then(() => ({
           filepath: webSiteNameWithExtensionPath,
           assetsDownloaded: data.assets.length,
