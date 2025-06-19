@@ -77,7 +77,7 @@ const downloadAssetsConcurrently = (dirname, assets) => {
 };
 
 const sanitizeOutputDir = (dir) => {
-  const restrictedPaths = ['/sys', '/etc', '/bin', '/lib'];
+  const restrictedPaths = ['/sys', '/etc', '/bin', '/usr', '/lib'];
   const finalDir = dir || process.cwd();
   return restrictedPaths.includes(finalDir) ? null : finalDir;
 };

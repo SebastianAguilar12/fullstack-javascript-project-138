@@ -32,15 +32,20 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const webSiteNameWithExtensionPath = path.join(savingDir, webSiteNameWithExtension);
   const dirContainer = downloadingDirName(webSite);
   const dirContainerPath = path.join(savingDir, dirContainer);
-  fs.access(savingDir, fs.constants.W_OK, (notAccess) => {
-    if (notAccess) {
-      fs.promises.mkdir(dirContainerPath, { recursive: true })
-        .then(() => console.log(`Directorio ${savingDir} creado.`));
-    } else {
-      console.log(`Directorio ${savingDir} ya existe.`);
-    }
-  });
-  return axios.get(webSite)
+  return fs.promises.access(savingDir, fs.constants.W_OK)
+    .catch((err) => {
+      if (err.code === 'ENOENT') {
+        throw new PageLoaderError(`❌ El directorio de destino: ${savingDir} no existe`);
+      }
+      if (err.code === 'EACCES') {
+        throw new PageLoaderError(`❌ Permiso denegado. No puedes escribir en el directorio: ${savingDir}`);
+      }
+      throw new PageLoaderError(`❌ Error accediendo al directorio: ${err.message}`);
+    })
+    .then(() => {
+      return fs.promises.mkdir(dirContainerPath, { recursive: true });
+    })
+    .then(axios.get(webSite))
     .then((response) => {
       const htmlContent = response.data;
       const data = processedResources(url.origin, dirContainerPath, htmlContent);
