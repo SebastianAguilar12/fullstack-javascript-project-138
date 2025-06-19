@@ -4,15 +4,25 @@ import * as fs from 'fs';
 import { Listr } from 'listr2';
 import axios from './axiosInstance.js';
 
+const normalizeUrl = (input) => {
+  if (!/^https?:\/\//i.test(input)) {
+    return `https://${input}`;
+  }
+  return input;
+};
 const getWebsiteSlugName = (url) => {
   const urlClass = new URL(url);
   const webSiteName = urlClass.hostname + urlClass.pathname;
   return webSiteName;
 };
 const makeDashedFileName = (url) => {
-  const { hostname, pathname } = new URL(url);
+  const normalizedUrl = normalizeUrl(url);
+  const { hostname, pathname } = new URL(normalizedUrl);
   const combined = path.join(hostname, pathname);
-  return combined.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return combined
+    .replace(/[^a-zA-Z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 };
 const makeDashedDirName = (slug) => slug.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-');
 const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, assets) => {
@@ -25,17 +35,9 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
       return ({ $element, url, baseUrl });
     })
     .filter(({ url }) => url.origin === baseUrl);
-  // console.log(elementsWithUrls);
+
   elementsWithUrls.forEach(({ $element, url }) => {
-    let baseName = path.basename(url.pathname);
-    if (baseName === '') {
-      baseName = 'index.html';
-    } else {
-      baseName = `${baseName}`;
-    }
-    const ext = path.extname(baseName); // obtiene extensión como .png, .css, etc.
-    const baseWithoutExt = baseName.replace(ext, '');
-    const slug = `${makeDashedFileName(`${url.hostname}-${baseWithoutExt}`)}${ext}`;
+    const slug = makeDashedFileName(url.toString());
     const filepath = path.join(path.basename(baseDirName), slug);
     assets.push({ url, filename: slug });
     $element.attr(attributeName, filepath);
