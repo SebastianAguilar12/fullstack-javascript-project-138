@@ -9,7 +9,11 @@ const getWebsiteSlugName = (url) => {
   const webSiteName = urlClass.hostname + urlClass.pathname;
   return webSiteName;
 };
-const makeDashedFileName = (slug) => slug.replace(/[^a-zA-Z0-9]/g, '-');
+const makeDashedFileName = (url) => {
+  const { hostname, pathname } = new URL(url);
+  const combined = path.join(hostname, pathname);
+  return combined.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+};
 const makeDashedDirName = (slug) => slug.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-');
 const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, assets) => {
   const $elements = $(tagName).toArray();
