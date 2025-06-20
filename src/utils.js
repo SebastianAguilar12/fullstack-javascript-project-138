@@ -46,7 +46,6 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
 
     const dashedName = makeDashedFileName(`${url.hostname}${pathnameWithoutExt}`);
     const slug = `${dashedName}${ext}`;
-    console.log(slug);
 
     const filepath = path.join(path.basename(baseDirName), slug);
     assets.push({ url, filename: slug });
@@ -77,7 +76,6 @@ const downloadAsset = (dirname, { url, filename }) => axios.get(url.toString(), 
       return fs.promises.writeFile(fullpath, response.data);
     }))
   .catch((error) => {
-    // Aquí decides si quieres lanzar el error o terminar el proceso
     throw new Error(`Error descargando el recurso: ${error.config?.url || 'desconocido'}`);
   });
 const downloadAssetsConcurrently = (dirname, assets) => {

@@ -59,7 +59,7 @@ describe('getFileFromURL', () => {
     };
     test('should create file in specified directory', async () => {
       const filepath = path.join(tempdir, EXPECTED_FILENAME);
-      await getFileFromURL(TEST_URL, tempdir);
+      await getFileFromURL(TEST_URL, `${tempdir}/${downloadingDirName(TEST_URL)}`);
       const fileExists = await waitForFile(filepath);
       expect(fileExists).toBe(true);
     });

@@ -33,9 +33,9 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const webSiteSlugName = getWebsiteSlugName(webSite);
   const url = new URL(webSite);
   const htmlFileName = `${makeDashedFileName(webSiteSlugName)}.html`;
-  const htmlFilePath = path.join(sanitizedDir, htmlFileName);
   const assetsDirName = downloadingDirName(webSite);
   const assetsDirPath = path.join(sanitizedDir, assetsDirName);
+  const htmlFilePath = path.join(assetsDirPath, htmlFileName);
 
   return fs.promises.access(sanitizedDir, fs.constants.W_OK)
     .then(() => fs.promises.mkdir(assetsDirPath, { recursive: true }))
