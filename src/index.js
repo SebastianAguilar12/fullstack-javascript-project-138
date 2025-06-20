@@ -51,7 +51,14 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
       const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName);
       const htmlFilePathInside = path.join(assetsDirPath, htmlFileName);
 
-      return prettier.format(data.html, { parser: 'html' })
+      return prettier.format(data.html, {
+        parser: 'html',
+        printWidth: 300,
+        htmlWhitespaceSensitivity: 'ignore',
+        tabWidth: 2,
+        useTabs: false,
+        bracketSameLine: false,
+      })
         .then((formattedHtml) => Promise.all([
           fs.promises.writeFile(htmlFilePathOutside, formattedHtml, 'utf-8'),
           fs.promises.writeFile(htmlFilePathInside, formattedHtml, 'utf-8'),
