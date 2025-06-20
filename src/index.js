@@ -51,10 +51,10 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
       const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName);
       const htmlFilePathInside = path.join(assetsDirPath, htmlFileName);
       const formattedHtml = beautify.html(data.html, {
-        indent_size: 4,
+        indent_size: 6,
         preserve_newlines: true,
         wrap_line_length: 0,
-        end_with_newline: false,
+        end_with_newline: true,
         unformatted: [],
       });
       const cleanHtml = formattedHtml.replace(/^\s*$(?:\r\n?|\n)/gm, '');
