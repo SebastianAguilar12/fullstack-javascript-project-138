@@ -53,7 +53,6 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
       const formattedHtml = beautify.html(data.html, {
         indent_size: 4,
         preserve_newlines: true,
-        max_preserve_newlines: 1,
         wrap_line_length: 0,
         end_with_newline: false,
         unformatted: [],
