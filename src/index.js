@@ -51,7 +51,7 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
       const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName);
       const htmlFilePathInside = path.join(assetsDirPath, htmlFileName);
       const formattedHtml = beautify.html(data.html, {
-        indent_level: 4,
+        indent_level: 0,
         indent_size: 8,
         preserve_newlines: true,
         wrap_line_length: 0,
