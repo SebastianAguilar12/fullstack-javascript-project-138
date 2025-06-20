@@ -64,7 +64,7 @@
   "main": "index.js",
   "scripts": {
     "start": "cross-env DEBUG=axios page-loader",
-    "test": "DEBUG=nock* jest"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules DEBUG=nock* jest"
   },
   "repository": {
     "type": "git",

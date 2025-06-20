@@ -1,4 +1,5 @@
 import path from 'path';
+import prettier from 'prettier';
 import * as fs from 'fs';
 import axios from 'axios';
 import PageLoaderError from './errors.js';
@@ -50,10 +51,11 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
       const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName);
       const htmlFilePathInside = path.join(assetsDirPath, htmlFileName);
 
-      return Promise.all([
-        fs.promises.writeFile(htmlFilePathOutside, data.html, 'utf-8'),
-        fs.promises.writeFile(htmlFilePathInside, data.html, 'utf-8'),
-      ]).then(() => data);
+      return prettier.format(data.html, { parser: 'html' })
+        .then((formattedHtml) => Promise.all([
+          fs.promises.writeFile(htmlFilePathOutside, formattedHtml, 'utf-8'),
+          fs.promises.writeFile(htmlFilePathInside, formattedHtml, 'utf-8'),
+        ]).then(() => data));
     })
     .then((data) => downloadAssetsConcurrently(assetsDirPath, data.assets)
       .then(() => ({
