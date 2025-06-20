@@ -34,7 +34,13 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
       const url = new URL($element.attr(attributeName), baseUrl);
       return ({ $element, url, baseUrl });
     })
-    .filter(({ url }) => url.origin === new URL(baseUrl).origin && url.toString() !== baseUrl);
+    .filter(({ url }) => {
+      const absoluteUrl = new URL(baseUrl);
+      return (
+        url.origin === absoluteUrl.origin
+        && url.pathname !== absoluteUrl.pathname
+      );
+    });
   elementsWithUrls.forEach(({ $element, url }) => {
     const ext = path.extname(url.pathname); // e.g. '.css'
     const pathnameWithoutExt = url.pathname.slice(0, url.pathname.length - ext.length);
