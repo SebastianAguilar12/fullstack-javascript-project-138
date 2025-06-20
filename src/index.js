@@ -26,7 +26,7 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const sanitizedDir = sanitizeOutputDir(savingDir);
   if (!sanitizedDir) {
     return Promise.reject(
-      new PageLoaderError(`❌ No se puede usar el directorio restringido: ${savingDir}`)
+      new PageLoaderError(`❌ No se puede usar el directorio restringido: ${savingDir}`),
     );
   }
 

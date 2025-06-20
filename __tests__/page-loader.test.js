@@ -11,7 +11,7 @@ import {
 } from '@jest/globals';
 import * as cheerio from 'cheerio';
 import getFileFromURL from '../src/index.js';
-import { downloadingDirName, makeDashedFileName } from '../src/utils.js';
+import { downloadingDirName } from '../src/utils.js';
 
 describe('getFileFromURL', () => {
   let tempdir;
@@ -99,9 +99,13 @@ describe('getFileFromURL', () => {
       } else {
         baseName = `${baseName}`;
       }
-      const ext = path.extname(baseName);
-      const nameWithoutExt = baseName.replace(ext, '');
-      const slug = `${makeDashedFileName(`${url.hostname}-${nameWithoutExt}`)}${ext}`;
+      const pathnameWithoutExt = url.pathname.replace(path.extname(url.pathname), '');
+      const dashed = `${url.hostname}${pathnameWithoutExt}`
+        .replace(/[^a-zA-Z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      const ext = path.extname(url.pathname);
+      const slug = `${dashed}${ext}`;
       const assetsFolder = downloadingDirName(TEST_URL);
       expect(getAttrValue('link', 'href')).toBe(path.join(assetsFolder, slug));
     });

@@ -35,12 +35,13 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
       return ({ $element, url, baseUrl });
     })
     .filter(({ url }) => url.origin === baseUrl);
-
   elementsWithUrls.forEach(({ $element, url }) => {
-    const ext = path.extname(url.pathname); // ".css", ".jpg", etc.
-    const baseName = path.basename(url.pathname, ext); // "styles", "me", etc.
-    const dashedName = makeDashedFileName(`${url.hostname}-${baseName}`); // slug sin extensión corrupta
-    const slug = `${dashedName}${ext}`; // reconstruimos el nombre final con extensión válida
+    const ext = path.extname(url.pathname); // e.g. '.css'
+    const pathnameWithoutExt = url.pathname.slice(0, url.pathname.length - ext.length);
+
+    const dashedName = makeDashedFileName(`${url.hostname}${pathnameWithoutExt}`);
+    const slug = `${dashedName}${ext}`;
+
     const filepath = path.join(path.basename(baseDirName), slug);
     assets.push({ url, filename: slug });
     $element.attr(attributeName, filepath);
