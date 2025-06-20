@@ -57,9 +57,10 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
         end_with_newline: false,
         unformatted: [],
       });
+      const cleanHtml = formattedHtml.replace(/^\s*$(?:\r\n?|\n)/gm, '');
       return Promise.all([
-        fs.promises.writeFile(htmlFilePathOutside, formattedHtml, 'utf-8'),
-        fs.promises.writeFile(htmlFilePathInside, formattedHtml, 'utf-8'),
+        fs.promises.writeFile(htmlFilePathOutside, cleanHtml, 'utf-8'),
+        fs.promises.writeFile(htmlFilePathInside, cleanHtml, 'utf-8'),
       ]).then(() => data)
         .then((data1) => downloadAssetsConcurrently(assetsDirPath, data1.assets)
           .then(() => ({
