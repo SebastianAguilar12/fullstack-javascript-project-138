@@ -47,16 +47,19 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
 
       const htmlContent = response.data;
       const data = processedResources(url.origin, assetsDirPath, htmlContent);
-      return fs.promises.writeFile(htmlFilePath, data.html, 'utf-8')
-        .then(() => data);
+      const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName);
+      const htmlFilePathInside = path.join(assetsDirPath, htmlFileName);
+
+      return Promise.all([
+        fs.promises.writeFile(htmlFilePathOutside, data.html, 'utf-8'),
+        fs.promises.writeFile(htmlFilePathInside, data.html, 'utf-8'),
+      ]).then(() => data);
     })
-    .then((data) => {
-      return downloadAssetsConcurrently(assetsDirPath, data.assets)
-        .then(() => ({
-          filepath: htmlFilePath,
-          assetsDownloaded: data.assets.length,
-        }));
-    })
+    .then((data) => downloadAssetsConcurrently(assetsDirPath, data.assets)
+      .then(() => ({
+        filepath: htmlFilePath,
+        assetsDownloaded: data.assets.length,
+      })))
     .catch((error) => {
       const code = error.code || error.cause?.code;
       const message = errorMessages[code] || `❌ Error desconocido: ${error.message}`;
