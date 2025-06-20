@@ -35,11 +35,10 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
       return ({ $element, url, baseUrl });
     })
     .filter(({ url }) => {
-      const absoluteUrl = new URL(baseUrl);
-      return (
-        url.origin === absoluteUrl.origin
-        && url.pathname !== absoluteUrl.pathname
-      );
+      const mainUrl = new URL(baseUrl);
+      const isSameOrigin = url.origin === mainUrl.origin;
+      const isSamePath = url.pathname === mainUrl.pathname || url.pathname === `${mainUrl.pathname}/`;
+      return isSameOrigin && !isSamePath;
     });
   elementsWithUrls.forEach(({ $element, url }) => {
     const ext = path.extname(url.pathname); // e.g. '.css'
@@ -47,6 +46,7 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
 
     const dashedName = makeDashedFileName(`${url.hostname}${pathnameWithoutExt}`);
     const slug = `${dashedName}${ext}`;
+    console.log(slug);
 
     const filepath = path.join(path.basename(baseDirName), slug);
     assets.push({ url, filename: slug });
