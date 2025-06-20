@@ -1,5 +1,5 @@
 import path from 'path';
-import prettier from 'prettier';
+import beautify from 'js-beautify';
 import * as fs from 'fs';
 import axios from 'axios';
 import PageLoaderError from './errors.js';
@@ -50,45 +50,44 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
       const data = processedResources(url.origin, assetsDirPath, htmlContent);
       const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName);
       const htmlFilePathInside = path.join(assetsDirPath, htmlFileName);
+      const formattedHtml = beautify.html(data.html, {
+        indent_size: 4,
+        preserve_newlines: true,
+        max_preserve_newlines: 1,
+        wrap_line_length: 0,
+        end_with_newline: false,
+        unformatted: [],
+      });
+      return Promise.all([
+        fs.promises.writeFile(htmlFilePathOutside, formattedHtml, 'utf-8'),
+        fs.promises.writeFile(htmlFilePathInside, formattedHtml, 'utf-8'),
+      ]).then(() => data)
+        .then((data1) => downloadAssetsConcurrently(assetsDirPath, data1.assets)
+          .then(() => ({
+            filepath: htmlFilePath,
+            assetsDownloaded: data.assets.length,
+          })))
+        .catch((error) => {
+          const code = error.code || error.cause?.code;
+          const message = errorMessages[code] || `❌ Error desconocido: ${error.message}`;
 
-      return prettier.format(data.html, {
-        parser: 'html',
-        printWidth: 300,
-        htmlWhitespaceSensitivity: 'ignore',
-        tabWidth: 2,
-        useTabs: false,
-        bracketSameLine: false,
-      })
-        .then((formattedHtml) => Promise.all([
-          fs.promises.writeFile(htmlFilePathOutside, formattedHtml, 'utf-8'),
-          fs.promises.writeFile(htmlFilePathInside, formattedHtml, 'utf-8'),
-        ]).then(() => data));
-    })
-    .then((data) => downloadAssetsConcurrently(assetsDirPath, data.assets)
-      .then(() => ({
-        filepath: htmlFilePath,
-        assetsDownloaded: data.assets.length,
-      })))
-    .catch((error) => {
-      const code = error.code || error.cause?.code;
-      const message = errorMessages[code] || `❌ Error desconocido: ${error.message}`;
+          if (code === 'EACCES') {
+            throw new PageLoaderError(`❌ Permiso denegado. No puedes escribir en el directorio: ${savingDir}`);
+          }
+          if (code === 'ENOENT') {
+            throw new PageLoaderError(`❌ El directorio de destino: ${savingDir} no existe`);
+          }
+          if (code === 'ENOTDIR') {
+            throw new PageLoaderError(`❌ Se esperaba un directorio, pero la ruta: ${savingDir} no es un directorio`);
+          }
+          if (code === 'ENOTFOUND') {
+            throw new PageLoaderError(`❌ No se pudo resolver el host: ${error.config?.url || 'URL desconocida'}`);
+          }
+          if (code === 'ECONNREFUSED') {
+            throw new PageLoaderError(`❌ El servidor rechazó la conexión: ${error.config?.url || 'URL desconocida'}`);
+          }
 
-      if (code === 'EACCES') {
-        throw new PageLoaderError(`❌ Permiso denegado. No puedes escribir en el directorio: ${savingDir}`);
-      }
-      if (code === 'ENOENT') {
-        throw new PageLoaderError(`❌ El directorio de destino: ${savingDir} no existe`);
-      }
-      if (code === 'ENOTDIR') {
-        throw new PageLoaderError(`❌ Se esperaba un directorio, pero la ruta: ${savingDir} no es un directorio`);
-      }
-      if (code === 'ENOTFOUND') {
-        throw new PageLoaderError(`❌ No se pudo resolver el host: ${error.config?.url || 'URL desconocida'}`);
-      }
-      if (code === 'ECONNREFUSED') {
-        throw new PageLoaderError(`❌ El servidor rechazó la conexión: ${error.config?.url || 'URL desconocida'}`);
-      }
-
-      throw new PageLoaderError(`${message} 🕵️‍♂️, el archivo no fue encontrado. Verifica que la URL esté bien escrita o que el archivo no haya sido removido`);
+          throw new PageLoaderError(`${message} 🕵️‍♂️, el archivo no fue encontrado. Verifica que la URL esté bien escrita o que el archivo no haya sido removido`);
+        });
     });
 }

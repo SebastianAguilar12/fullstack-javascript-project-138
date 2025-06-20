@@ -15,6 +15,7 @@
     "eslint-plugin-import": "^2.31.0",
     "fs-extra": "^9.1.0",
     "globals": "^16.0.0",
+    "js-beautify": "^1.15.4",
     "js-yaml": "^4.1.0",
     "lint": "^1.1.2",
     "listr": "^0.14.3",
