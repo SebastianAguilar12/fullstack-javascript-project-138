@@ -35,7 +35,7 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const htmlFileName = `${makeDashedFileName(webSiteSlugName)}.html`;
   const assetsDirName = downloadingDirName(webSite);
   const assetsDirPath = path.join(sanitizedDir, assetsDirName);
-  const htmlFilePath = path.join(assetsDirPath, htmlFileName);
+  const htmlFilePath = path.join(sanitizedDir, htmlFileName);
 
   return fs.promises.access(sanitizedDir, fs.constants.W_OK)
     .then(() => fs.promises.mkdir(assetsDirPath, { recursive: true }))
@@ -51,7 +51,6 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
         .then(() => data);
     })
     .then((data) => {
-      console.log(`🔎 Descargando ${webSite}...`);
       return downloadAssetsConcurrently(assetsDirPath, data.assets)
         .then(() => ({
           filepath: htmlFilePath,

@@ -58,8 +58,6 @@ const processedResources = (baseURL, baseDirName, html) => {
   processedResource($, 'img', 'src', baseURL, baseDirName, assets);
   processedResource($, 'link', 'href', baseURL, baseDirName, assets);
   processedResource($, 'script', 'src', baseURL, baseDirName, assets);
-  // console.log(assets);
-  // console.log({ html: $.html(), assets });
   return { html: $.html(), assets };
 };
 
