@@ -29,24 +29,27 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
   const $elements = $(tagName).toArray();
   const elementsWithUrls = $elements
     .map((element) => $(element))
-    .filter(($element) => $element.attr(attributeName))
+    .filter(($element) => {
+      const attrVal = $element.attr(attributeName);
+      if (!attrVal) return false;
+      try {
+        const resourceUrl = new URL(attrVal, baseUrl);
+        const pageOrigin = new URL(baseUrl).origin;
+        return resourceUrl.origin === pageOrigin;
+      } catch {
+        return false;
+      }
+    })
     .map(($element) => {
       const url = new URL($element.attr(attributeName), baseUrl);
-      return ({ $element, url, baseUrl });
-    })
-    .filter(({ url }) => {
-      const mainUrl = new URL(baseUrl);
-      const isSameOrigin = url.origin === mainUrl.origin;
-      const isLocalPath = url.pathname.startsWith('/');
-      return isSameOrigin && isLocalPath;
+      return { $element, url };
     });
-  elementsWithUrls.forEach(({ $element, url }) => {
-    const ext = path.extname(url.pathname); // e.g. '.css'
-    const pathnameWithoutExt = url.pathname.slice(0, url.pathname.length - ext.length);
 
+  elementsWithUrls.forEach(({ $element, url }) => {
+    const ext = path.extname(url.pathname);
+    const pathnameWithoutExt = url.pathname.slice(0, url.pathname.length - ext.length);
     const dashedName = makeDashedFileName(`${url.hostname}${pathnameWithoutExt}`);
     const slug = `${dashedName}${ext}`;
-
     const filepath = path.join(path.basename(baseDirName), slug);
     assets.push({ url, filename: slug });
     $element.attr(attributeName, filepath);
@@ -64,21 +67,23 @@ const processedResources = (baseURL, baseDirName, html) => {
     const href = $element.attr('href');
     const rel = $element.attr('rel');
     if (!href || rel !== 'stylesheet') return;
-    const url = new URL(href, baseURL);
-    const mainUrl = new URL(baseURL);
-    const isSameOrigin = url.origin === mainUrl.origin;
-    const pagePath = mainUrl.pathname.endsWith('/')
-      ? mainUrl.pathname
-      : `${mainUrl.pathname}/`;
-    const isSubresource = url.pathname.startsWith(pagePath);
-    if (isSameOrigin && isSubresource) {
-      const ext = path.extname(url.pathname);
-      const pathnameWithoutExt = url.pathname.slice(0, url.pathname.length - ext.length);
-      const dashedName = makeDashedFileName(`${url.hostname}${pathnameWithoutExt}`);
-      const slug = `${dashedName}${ext}`;
-      const filepath = path.join(path.basename(baseDirName), slug);
-      $element.attr('href', filepath);
-      assets.push({ url, filename: slug });
+
+    try {
+      const url = new URL(href, baseURL);
+      const mainUrl = new URL(baseURL);
+      const isSameOrigin = url.origin === mainUrl.origin;
+      const isSamePath = url.pathname === mainUrl.pathname || url.pathname === `${mainUrl.pathname}/`;
+      if (isSameOrigin && !isSamePath) {
+        const ext = path.extname(url.pathname);
+        const pathnameWithoutExt = url.pathname.slice(0, url.pathname.length - ext.length);
+        const dashedName = makeDashedFileName(`${url.hostname}${pathnameWithoutExt}`);
+        const slug = `${dashedName}${ext}`;
+        const filepath = path.join(path.basename(baseDirName), slug);
+        $element.attr('href', filepath);
+        assets.push({ url, filename: slug });
+      }
+    } catch {
+      // ignorar errores por href inválido
     }
   });
 
