@@ -36,7 +36,8 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const htmlFileName = `${makeDashedFileName(webSiteSlugName)}.html`;
   const assetsDirName = downloadingDirName(webSite);
   const assetsDirPath = path.join(sanitizedDir, assetsDirName);
-  const htmlFilePath = path.join(sanitizedDir, htmlFileName);
+  const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName); // sin modificaciones
+  const htmlFilePathInside = path.join(assetsDirPath, htmlFileName); // con modificaciones
 
   return fs.promises.access(sanitizedDir, fs.constants.W_OK)
     .then(() => fs.promises.mkdir(assetsDirPath, { recursive: true }))
@@ -46,10 +47,17 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
         throw new PageLoaderError(`❌ El contenido descargado no es HTML válido desde ${webSite}`);
       }
 
-      const htmlContent = response.data;
-      const data = processedResources(url.origin, assetsDirPath, htmlContent);
-      const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName);
-      const formattedHtml = beautify.html(data.html, {
+      const originalHtml = response.data;
+
+      // Procesar para modificar rutas relativas
+      const { html: modifiedHtml, assets } = processedResources(
+        url.origin,
+        assetsDirPath,
+        originalHtml,
+      );
+
+      // Beautify ambas versiones
+      const formattedOriginalHtml = beautify.html(originalHtml, {
         indent_inner_html: true,
         indent_size: 4,
         preserve_newlines: true,
@@ -57,36 +65,46 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
         end_with_newline: true,
         unformatted: [],
       });
-      const cleanHtml = formattedHtml.replace(/^\s*$(?:\r\n?|\n)/gm, '');
+
+      const formattedModifiedHtml = beautify.html(modifiedHtml, {
+        indent_inner_html: true,
+        indent_size: 4,
+        preserve_newlines: true,
+        wrap_line_length: 0,
+        end_with_newline: true,
+        unformatted: [],
+      });
+
+      // Guardar los dos HTMLs
       return Promise.all([
-        fs.promises.writeFile(htmlFilePathOutside, cleanHtml, 'utf-8'),
-      ]).then(() => data)
-        .then((data1) => downloadAssetsConcurrently(assetsDirPath, data1.assets)
-          .then(() => ({
-            filepath: htmlFilePath,
-            assetsDownloaded: data.assets.length,
-          })))
-        .catch((error) => {
-          const code = error.code || error.cause?.code;
-          const message = errorMessages[code] || `❌ Error desconocido: ${error.message}`;
+        fs.promises.writeFile(htmlFilePathOutside, formattedOriginalHtml, 'utf-8'),
+        fs.promises.writeFile(htmlFilePathInside, formattedModifiedHtml, 'utf-8'),
+      ]).then(() => downloadAssetsConcurrently(assetsDirPath, assets)
+        .then(() => ({
+          filepath: htmlFilePathOutside,
+          assetsDownloaded: assets.length,
+        })));
+    })
+    .catch((error) => {
+      const code = error.code || error.cause?.code;
+      const message = errorMessages[code] || `❌ Error desconocido: ${error.message}`;
 
-          if (code === 'EACCES') {
-            throw new PageLoaderError(`❌ Permiso denegado. No puedes escribir en el directorio: ${savingDir}`);
-          }
-          if (code === 'ENOENT') {
-            throw new PageLoaderError(`❌ El directorio de destino: ${savingDir} no existe`);
-          }
-          if (code === 'ENOTDIR') {
-            throw new PageLoaderError(`❌ Se esperaba un directorio, pero la ruta: ${savingDir} no es un directorio`);
-          }
-          if (code === 'ENOTFOUND') {
-            throw new PageLoaderError(`❌ No se pudo resolver el host: ${error.config?.url || 'URL desconocida'}`);
-          }
-          if (code === 'ECONNREFUSED') {
-            throw new PageLoaderError(`❌ El servidor rechazó la conexión: ${error.config?.url || 'URL desconocida'}`);
-          }
+      if (code === 'EACCES') {
+        throw new PageLoaderError(`❌ Permiso denegado. No puedes escribir en el directorio: ${savingDir}`);
+      }
+      if (code === 'ENOENT') {
+        throw new PageLoaderError(`❌ El directorio de destino: ${savingDir} no existe`);
+      }
+      if (code === 'ENOTDIR') {
+        throw new PageLoaderError(`❌ Se esperaba un directorio, pero la ruta: ${savingDir} no es un directorio`);
+      }
+      if (code === 'ENOTFOUND') {
+        throw new PageLoaderError(`❌ No se pudo resolver el host: ${error.config?.url || 'URL desconocida'}`);
+      }
+      if (code === 'ECONNREFUSED') {
+        throw new PageLoaderError(`❌ El servidor rechazó la conexión: ${error.config?.url || 'URL desconocida'}`);
+      }
 
-          throw new PageLoaderError(`${message} 🕵️‍♂️, el archivo no fue encontrado. Verifica que la URL esté bien escrita o que el archivo no haya sido removido`);
-        });
+      throw new PageLoaderError(`${message} 🕵️‍♂️, el archivo no fue encontrado. Verifica que la URL esté bien escrita o que el archivo no haya sido removido`);
     });
 }
