@@ -49,7 +49,6 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
       const htmlContent = response.data;
       const data = processedResources(url.origin, assetsDirPath, htmlContent);
       const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName);
-      const htmlFilePathInside = path.join(assetsDirPath, htmlFileName);
       const formattedHtml = beautify.html(data.html, {
         indent_inner_html: true,
         indent_size: 4,
@@ -61,7 +60,6 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
       const cleanHtml = formattedHtml.replace(/^\s*$(?:\r\n?|\n)/gm, '');
       return Promise.all([
         fs.promises.writeFile(htmlFilePathOutside, cleanHtml, 'utf-8'),
-        fs.promises.writeFile(htmlFilePathInside, cleanHtml, 'utf-8'),
       ]).then(() => data)
         .then((data1) => downloadAssetsConcurrently(assetsDirPath, data1.assets)
           .then(() => ({
