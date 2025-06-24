@@ -37,8 +37,8 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
     .filter(({ url }) => {
       const mainUrl = new URL(baseUrl);
       const isSameOrigin = url.origin === mainUrl.origin;
-      const isSamePage = url.href === baseUrl;
-      return isSameOrigin && !isSamePage;
+      const isLocalPath = url.pathname.startsWith('/');
+      return isSameOrigin && isLocalPath;
     });
   elementsWithUrls.forEach(({ $element, url }) => {
     const ext = path.extname(url.pathname); // e.g. '.css'
@@ -59,15 +59,19 @@ const processedResources = (baseURL, baseDirName, html) => {
   processedResource($, 'img', 'src', baseURL, baseDirName, assets);
   processedResource($, 'script', 'src', baseURL, baseDirName, assets);
 
-  $('link[rel="stylesheet"]').each((i, elem) => {
+  $('link').each((_, elem) => {
     const $element = $(elem);
     const href = $element.attr('href');
-    if (!href) return;
+    const rel = $element.attr('rel');
+    if (!href || rel !== 'stylesheet') return;
     const url = new URL(href, baseURL);
     const mainUrl = new URL(baseURL);
     const isSameOrigin = url.origin === mainUrl.origin;
-    const isSamePath = url.pathname === mainUrl.pathname || url.pathname === `${mainUrl.pathname}/`;
-    if (isSameOrigin && !isSamePath) {
+    const pagePath = mainUrl.pathname.endsWith('/')
+      ? mainUrl.pathname
+      : `${mainUrl.pathname}/`;
+    const isSubresource = url.pathname.startsWith(pagePath);
+    if (isSameOrigin && isSubresource) {
       const ext = path.extname(url.pathname);
       const pathnameWithoutExt = url.pathname.slice(0, url.pathname.length - ext.length);
       const dashedName = makeDashedFileName(`${url.hostname}${pathnameWithoutExt}`);
