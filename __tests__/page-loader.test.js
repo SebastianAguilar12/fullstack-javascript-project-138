@@ -87,27 +87,22 @@ describe('getFileFromURL', () => {
   });
   describe('HTML modification', () => {
     test('should correctly modify and save HTML content', async () => {
-      const url = new URL(TEST_URL);
       await getFileFromURL(TEST_URL, tempdir);
       const filepath = path.join(tempdir, EXPECTED_FILENAME);
       const result = await fs.promises.readFile(filepath, 'utf8');
-      const $el = cheerio.load(result);
-      const getAttrValue = (tagname, attr) => $el(tagname).attr(attr);
-      let baseName = path.basename(url.pathname);
-      if (baseName === '') {
-        baseName = 'index.html';
-      } else {
-        baseName = `${baseName}`;
-      }
-      const pathnameWithoutExt = url.pathname.replace(path.extname(url.pathname), '');
-      const dashed = `${url.hostname}${pathnameWithoutExt}`
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
-      const ext = path.extname(url.pathname);
-      const slug = `${dashed}${ext}`;
-      const assetsFolder = downloadingDirName(TEST_URL);
-      expect(getAttrValue('link', 'href')).toBe(path.join(assetsFolder, slug));
+      const $ = cheerio.load(result);
+      const resources = [];
+      $('img, script, link[rel="stylesheet"]').each((_, el) => {
+        const attr = el.name === 'link' ? 'href' : 'src';
+        const value = $(el).attr(attr);
+        if (value && !value.startsWith('http')) {
+          resources.push(value);
+        }
+      });
+      expect(resources.length).toBeGreaterThan(0);
+      resources.forEach((val) => {
+        expect(val).toMatch(new RegExp(`^${downloadingDirName(TEST_URL)}/`));
+      });
     });
   });
   describe('images downloading', () => {

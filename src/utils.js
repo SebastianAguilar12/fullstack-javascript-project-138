@@ -37,8 +37,8 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
     .filter(({ url }) => {
       const mainUrl = new URL(baseUrl);
       const isSameOrigin = url.origin === mainUrl.origin;
-      const isSamePath = url.pathname === mainUrl.pathname || url.pathname === `${mainUrl.pathname}/`;
-      return isSameOrigin && !isSamePath;
+      const isSamePage = url.href === baseUrl;
+      return isSameOrigin && !isSamePage;
     });
   elementsWithUrls.forEach(({ $element, url }) => {
     const ext = path.extname(url.pathname); // e.g. '.css'
@@ -55,9 +55,29 @@ const processedResource = ($, tagName, attributeName, baseUrl, baseDirName, asse
 const processedResources = (baseURL, baseDirName, html) => {
   const $ = cheerio.load(html, { decodeEntities: true });
   const assets = [];
+
   processedResource($, 'img', 'src', baseURL, baseDirName, assets);
-  processedResource($, 'link', 'href', baseURL, baseDirName, assets);
   processedResource($, 'script', 'src', baseURL, baseDirName, assets);
+
+  $('link[rel="stylesheet"]').each((i, elem) => {
+    const $element = $(elem);
+    const href = $element.attr('href');
+    if (!href) return;
+    const url = new URL(href, baseURL);
+    const mainUrl = new URL(baseURL);
+    const isSameOrigin = url.origin === mainUrl.origin;
+    const isSamePath = url.pathname === mainUrl.pathname || url.pathname === `${mainUrl.pathname}/`;
+    if (isSameOrigin && !isSamePath) {
+      const ext = path.extname(url.pathname);
+      const pathnameWithoutExt = url.pathname.slice(0, url.pathname.length - ext.length);
+      const dashedName = makeDashedFileName(`${url.hostname}${pathnameWithoutExt}`);
+      const slug = `${dashedName}${ext}`;
+      const filepath = path.join(path.basename(baseDirName), slug);
+      $element.attr('href', filepath);
+      assets.push({ url, filename: slug });
+    }
+  });
+
   return { html: $.html(), assets };
 };
 
