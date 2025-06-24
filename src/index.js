@@ -36,8 +36,8 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
   const htmlFileName = `${makeDashedFileName(webSiteSlugName)}.html`;
   const assetsDirName = downloadingDirName(webSite);
   const assetsDirPath = path.join(sanitizedDir, assetsDirName);
-  const htmlFilePathOutside = path.join(sanitizedDir, htmlFileName); // sin modificaciones
-  const htmlFilePathInside = path.join(assetsDirPath, htmlFileName); // con modificaciones
+  const htmlFilePathInside = path.join(sanitizedDir, htmlFileName); // sin modificaciones
+  const htmlFilePathOutside = path.join(assetsDirPath, htmlFileName); // con modificaciones
 
   return fs.promises.access(sanitizedDir, fs.constants.W_OK)
     .then(() => fs.promises.mkdir(assetsDirPath, { recursive: true }))

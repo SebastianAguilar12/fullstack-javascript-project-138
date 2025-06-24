@@ -88,8 +88,7 @@ describe('getFileFromURL', () => {
   describe('HTML modification', () => {
     test('should correctly modify and save HTML content', async () => {
       await getFileFromURL(TEST_URL, tempdir);
-      const assetsDir = downloadingDirName(TEST_URL);
-      const filepath = path.join(tempdir, assetsDir, EXPECTED_FILENAME);
+      const filepath = path.join(tempdir, EXPECTED_FILENAME);
       const result = await fs.promises.readFile(filepath, 'utf8');
       const $ = cheerio.load(result);
       const resources = [];
