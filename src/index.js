@@ -64,7 +64,7 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
         wrap_line_length: 0,
         end_with_newline: true,
         unformatted: [],
-      });
+      }).replace(/^\s*$(?:\r\n?|\n)/gm, '');
 
       const formattedModifiedHtml = beautify.html(modifiedHtml, {
         indent_inner_html: true,
@@ -73,7 +73,7 @@ export default function getFileFromURL(webSite, savingDir = process.cwd()) {
         wrap_line_length: 0,
         end_with_newline: true,
         unformatted: [],
-      });
+      }).replace(/^\s*$(?:\r\n?|\n)/gm, '');
 
       // Guardar los dos HTMLs
       return Promise.all([
