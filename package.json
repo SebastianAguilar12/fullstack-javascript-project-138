@@ -64,7 +64,7 @@
   "description": "Page loader utility",
   "main": "index.js",
   "scripts": {
-  "test": "NODE_OPTIONS=--experimental-vm-modules DEBUG=nock* jest"
+  "test": "NODE_OPTIONS=--experimental-vm-modules DEBUG=nock* npx jest"
   },
   "repository": {
     "type": "git",
