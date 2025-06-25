@@ -64,8 +64,7 @@
   "description": "Page loader utility",
   "main": "index.js",
   "scripts": {
-    "start": "cross-env DEBUG=axios page-loader",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules DEBUG=nock* jest"
+  "test": "NODE_OPTIONS=--experimental-vm-modules DEBUG=nock* jest"
   },
   "repository": {
     "type": "git",
